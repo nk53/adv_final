@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>CSE 411 - Project 5 - Nathan Kern</title>
+<script src="files/jquery-3.3.1.min.js"></script>
+<!--<script src="files/Chart.min.js"></script>-->
+<script src="files/Chart.js"></script>
+</head>
+<style>
+div, canvas {
+  color: #404040;
+  font: 300 15px/1.6 "Helvetica Neue",Helvetica,Arial,sans-serif;
+  margin: 0 auto;
+  text-align: center;
+}
+
+div#message {
+  padding: 15px 0;
+}
+
+canvas#chart {
+  display: block;
+  padding-top: 15px;
+  /*width: 400px !important;*/
+  height: 50% !important;
+}
+
+</style>
+<script>
+var message, chart;
+$(document).ready(function() {
+  message = $("#message");
+  chart = $("#chart");
+  $("#search").click(function() {
+    let query = $("#query").val();
+    let url = "data/" + query;
+    $.ajax({
+      url: url,
+      dataType: "json"
+    }).done(function(response) {
+      if (response["success"] !== undefined && !response["success"]) {
+        message.show();
+        message.text("No results for '"+query+"'");
+      } else {
+        message.hide();
+        var hist = response["histogram"];
+        // the target order of days
+        var all_days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        var days = [];
+        var data = [];
+        // we might not actually have all the days in hist
+        for (day of all_days)
+          if (hist[day] !== undefined) {
+            days.push(day)
+            data.push(hist[day]);
+          }
+        var ctx = document.getElementById("chart");
+        var myChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+              labels: days,
+              datasets: [{
+                  label: '# of tweets',
+                  data: data,
+                  backgroundColor: [
+                      'rgba(255, 99, 132, 0.2)',
+                      'rgba(153, 51, 0, 0.2)',
+                      'rgba(54, 162, 235, 0.2)',
+                      'rgba(255, 206, 86, 0.2)',
+                      'rgba(75, 192, 192, 0.2)',
+                      'rgba(153, 102, 255, 0.2)',
+                      'rgba(255, 159, 64, 0.2)'
+                  ],
+                  borderColor: [
+                      'rgba(255,99,132,1)',
+                      'rgba(153, 51, 0, 1)',
+                      'rgba(54, 162, 235, 1)',
+                      'rgba(255, 206, 86, 1)',
+                      'rgba(75, 192, 192, 1)',
+                      'rgba(153, 102, 255, 1)',
+                      'rgba(255, 159, 64, 1)'
+                  ],
+                  borderWidth: 1
+              }]
+          },
+          options: {
+            responsive: false,
+            maintainAspectRatio: true,
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero:true
+                }
+              }]
+            },
+          },
+        });
+      }
+    });
+  });
+});
+</script>
+<body>
+  <div id="contents">
+    <h1>Twitter Trend Visualizer</h1>
+    <input type="text" id="query" />
+    <button id="search">Search</button>
+    <div id="message">Enter a term to search.</div>
+    <canvas id="chart"></canvas>
+  </div>
+</body>
+</html>
